@@ -7,6 +7,7 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\Middleware\HTTPMiddleware;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * After the page has rendered, append the badge manifest plus the module's
@@ -44,7 +45,13 @@ class EditLinkMiddleware implements HTTPMiddleware
             return $response;
         }
 
-        $manifest = $service->buildManifest($page);
+        $mode = $service->getReadingMode();
+        $manifest = Versioned::withVersionedMode(function () use ($service, $page, $mode) {
+            if ($mode) {
+                Versioned::set_reading_mode($mode);
+            }
+            return $service->buildManifest($page);
+        });
         if (!$manifest) {
             return $response;
         }

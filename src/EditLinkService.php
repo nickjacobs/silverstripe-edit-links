@@ -13,6 +13,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Permission;
 use SilverStripe\SiteConfig\SiteConfig;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
 
 /**
@@ -52,15 +53,36 @@ class EditLinkService
      */
     protected ?SiteTree $currentPage = null;
 
+    /**
+     * SiteConfig and Versioned reading mode as they were while the page was
+     * served. Later middlewares (Subsites, Versioned) reset global state on
+     * the way out, so the injection step reuses these instead.
+     */
+    protected ?SiteConfig $siteConfig = null;
+
+    protected ?string $readingMode = null;
+
     public function setCurrentPage(?SiteTree $page): static
     {
         $this->currentPage = $page;
+        $this->siteConfig = $page ? SiteConfig::current_site_config() : null;
+        $this->readingMode = $page ? Versioned::get_reading_mode() : null;
         return $this;
     }
 
     public function getCurrentPage(): ?SiteTree
     {
         return $this->currentPage;
+    }
+
+    public function getReadingMode(): ?string
+    {
+        return $this->readingMode;
+    }
+
+    public function getSiteConfig(): SiteConfig
+    {
+        return $this->siteConfig ?? SiteConfig::current_site_config();
     }
 
     public static function elementalInstalled(): bool
@@ -85,7 +107,7 @@ class EditLinkService
 
         if ($this->config()->get('show_public_in_dev')
             && (Director::isDev() || Director::isTest())
-            && SiteConfig::current_site_config()->ElementEditLinkShowPublic
+            && $this->getSiteConfig()->ElementEditLinkShowPublic
         ) {
             return true;
         }
@@ -108,13 +130,13 @@ class EditLinkService
 
     public function pageBadgesEnabled(): bool
     {
-        return SiteConfig::current_site_config()->PageEditLinkEnable && $this->canView();
+        return $this->getSiteConfig()->PageEditLinkEnable && $this->canView();
     }
 
     public function elementBadgesEnabled(): bool
     {
         return static::elementalInstalled()
-            && SiteConfig::current_site_config()->ElementEditLinkEnable
+            && $this->getSiteConfig()->ElementEditLinkEnable
             && $this->canView();
     }
 

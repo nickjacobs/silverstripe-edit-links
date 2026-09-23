@@ -3,7 +3,13 @@
     "description": "Front-end edit badges for SilverStripe pages and Elemental blocks, linking editors straight to the CMS edit form. Auto-injects with no template changes.",
     "type": "silverstripe-vendormodule",
     "license": "BSD-3-Clause",
-    "keywords": ["silverstripe", "elemental", "cms", "edit link", "editor"],
+    "keywords": [
+        "silverstripe",
+        "elemental",
+        "cms",
+        "edit link",
+        "editor"
+    ],
     "authors": [
         {
             "name": "Nick Jacobs"
@@ -13,7 +19,8 @@
         "php": "^8.3",
         "silverstripe/framework": "^6.0",
         "silverstripe/cms": "^6.0",
-        "silverstripe/siteconfig": "^6.0"
+        "silverstripe/siteconfig": "^6.0",
+        "silverstripe/versioned": "^3.0"
     },
     "suggest": {
         "dnadesign/silverstripe-elemental": "Enables per-block edit badges and the CMS 'back to page' / preview buttons"
