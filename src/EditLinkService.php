@@ -160,6 +160,9 @@ class EditLinkService
 
     protected function renderBadge(string $type, DataObject $record, ?string $link): DBHTMLText
     {
+        // Elemental returns links relative to the base URL; make them safe
+        // to use from any page depth.
+        $link = $link ? Director::absoluteURL($link) : null;
         $canEdit = $this->canEdit() && $link;
 
         $data = ArrayData::create([
