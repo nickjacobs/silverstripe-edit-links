@@ -1,0 +1,52 @@
+---
+Name: nickjacobs-editlinks
+After:
+  - '#coreconfig'
+  - '#elemental'
+---
+NickJacobs\EditLinks\EditLinkService:
+  # Inject the badges into every HTML page response via middleware.
+  # Set to false and place $EditLink in your templates instead.
+  auto_inject: true
+  # Permission code required to see the badge (class, ID, title).
+  view_permission: CMS_ACCESS_CMSMain
+  # Permission code required to see the "edit" link inside the badge.
+  edit_permission: ADMIN
+  # Permission code required to see the Settings > Edit links tab.
+  settings_permission: ADMIN
+  # Honour the "show to public" SiteConfig flag when in dev or test mode.
+  show_public_in_dev: true
+  # Show the record's Title in the badge.
+  show_titles: true
+  # Open CMS edit links in a new tab.
+  open_in_new_tab: true
+  # Add "Back to page", "View live" and "Preview draft" buttons to the
+  # Elemental block edit form in the CMS.
+  cms_buttons: true
+
+SilverStripe\SiteConfig\SiteConfig:
+  extensions:
+    - NickJacobs\EditLinks\Extensions\SiteConfigExtension
+
+SilverStripe\CMS\Model\SiteTree:
+  extensions:
+    - NickJacobs\EditLinks\Extensions\SiteTreeExtension
+
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Control\Director:
+    properties:
+      Middlewares:
+        EditLinkMiddleware: '%$NickJacobs\EditLinks\Middleware\EditLinkMiddleware'
+
+---
+Name: nickjacobs-editlinks-elemental
+Only:
+  classexists: 'DNADesign\Elemental\Models\BaseElement'
+---
+DNADesign\Elemental\Models\BaseElement:
+  extensions:
+    - NickJacobs\EditLinks\Extensions\ElementExtension
+
+SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest:
+  extensions:
+    - NickJacobs\EditLinks\Extensions\GridFieldItemRequestExtension
