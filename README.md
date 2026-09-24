@@ -8,6 +8,7 @@ By default the module **auto-injects** the badges into every HTML response, so n
 
 - SilverStripe Framework and CMS 6
 - `dnadesign/silverstripe-elemental` 6 (optional, enables block badges and CMS buttons)
+- `tractorcow/silverstripe-fluent` (optional, see [Fluent](#fluent))
 
 ## Installation
 
@@ -64,6 +65,7 @@ NickJacobs\EditLinks\EditLinkService:
   show_titles: true                     # include the record Title in the badge
   open_in_new_tab: true                 # edit links open in a new tab
   cms_buttons: true                     # Back to page / View live / Preview draft on block edit forms
+  carry_locale: true                    # append the viewed locale to edit links (Fluent only)
 ```
 
 ### SiteConfig switches
@@ -97,6 +99,29 @@ Colours and sizing are CSS custom properties. Override them in your own styleshe
 - `EditLinkService::updateBadgeData(ArrayData $data, string $type, DataObject $record)` to add fields to the badge template.
 - `EditLinkService::updateManifest(array &$manifest, SiteTree $page)` to add or remove entries before injection.
 - Override the template at `templates/NickJacobs/EditLinks/EditLink.ss` in your project.
+
+## Fluent
+
+On a Fluent site, edit links carry the locale being viewed:
+
+```
+/admin/pages/edit/EditForm/196/field/ElementalArea/item/3563/edit?l=en_GB
+```
+
+This matters more than it looks. Fluent resolves the CMS locale from the query
+parameter first, then from a persisted cookie. Without the parameter, clicking a
+badge on a non-default locale opens whichever locale the editor last used in the
+CMS — usually the wrong one, and the record often will not resolve there at all.
+Worse, Fluent persists whatever it resolved, so an editor can carry on editing
+the wrong locale without an obvious signal.
+
+The parameter name is read from Fluent's own `query_param` config rather than
+hardcoded, and the locale is captured while the page is served, because Fluent
+restores its state before the badges are injected.
+
+Set `carry_locale: false` to turn this off.
+
+Fluent is not a dependency. Without it installed, links are unchanged.
 
 ## CMS buttons
 

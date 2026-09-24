@@ -23,7 +23,8 @@
         "silverstripe/versioned": "^3.0"
     },
     "suggest": {
-        "dnadesign/silverstripe-elemental": "Enables per-block edit badges and the CMS 'back to page' / preview buttons"
+        "dnadesign/silverstripe-elemental": "Enables per-block edit badges and the CMS 'back to page' / preview buttons",
+        "tractorcow/silverstripe-fluent": "Edit links carry the locale being viewed, so editors land in the right one"
     },
     "autoload": {
         "psr-4": {
