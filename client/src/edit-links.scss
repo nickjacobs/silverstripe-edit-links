@@ -15,18 +15,24 @@
     --ss-edit-link-page-z: 999;
 }
 
+// Layout properties are !important on purpose: the badge is injected into
+// arbitrary site markup, and themes often lift every child of a section
+// (e.g. `.section > div { position: relative; z-index: 1 }`) above
+// background decoration. Without this the badge drops into normal flow.
 .ss-edit-link {
-    position: absolute;
-    top: var(--ss-edit-link-offset);
-    right: var(--ss-edit-link-offset);
-    z-index: var(--ss-edit-link-z);
+    position: absolute !important;
+    top: var(--ss-edit-link-offset) !important;
+    right: var(--ss-edit-link-offset) !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: var(--ss-edit-link-z) !important;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0;
     box-sizing: border-box;
     max-width: 28px;
-    margin: 0;
+    margin: 0 !important;
     padding: 4px;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: var(--ss-edit-link-font-size);
@@ -46,7 +52,7 @@
     }
 
     &--page {
-        z-index: var(--ss-edit-link-page-z);
+        z-index: var(--ss-edit-link-page-z) !important;
         background-color: var(--ss-edit-link-page-bg);
     }
 
