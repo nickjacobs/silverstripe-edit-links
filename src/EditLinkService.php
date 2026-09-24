@@ -3,6 +3,7 @@
 namespace NickJacobs\EditLinks;
 
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Configurable;
@@ -15,6 +16,8 @@ use SilverStripe\Security\Permission;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
+use TractorCow\Fluent\Extension\FluentDirectorExtension;
+use TractorCow\Fluent\State\FluentState;
 
 /**
  * Decides who sees edit badges, builds the CMS links and renders the badge
@@ -48,6 +51,11 @@ class EditLinkService
     private static bool $cms_buttons = true;
 
     /**
+     * Carry the locale being viewed into the CMS link when Fluent is installed.
+     */
+    private static bool $carry_locale = true;
+
+    /**
      * The page being served by the current request, captured on controller
      * init so the middleware can build the manifest after rendering.
      */
@@ -62,11 +70,19 @@ class EditLinkService
 
     protected ?string $readingMode = null;
 
+    /**
+     * Fluent's locale as it was while the page was served. Fluent restores
+     * its state once the inner delegate returns, so by injection time the
+     * locale is gone - same reason SiteConfig and the reading mode are held.
+     */
+    protected ?string $locale = null;
+
     public function setCurrentPage(?SiteTree $page): static
     {
         $this->currentPage = $page;
         $this->siteConfig = $page ? SiteConfig::current_site_config() : null;
         $this->readingMode = $page ? Versioned::get_reading_mode() : null;
+        $this->locale = $page ? static::currentLocale() : null;
         return $this;
     }
 
@@ -83,6 +99,21 @@ class EditLinkService
     public function getSiteConfig(): SiteConfig
     {
         return $this->siteConfig ?? SiteConfig::current_site_config();
+    }
+
+    public function getLocale(): ?string
+    {
+        return $this->locale ?? static::currentLocale();
+    }
+
+    /**
+     * The locale Fluent is currently in, or null when Fluent is not installed.
+     */
+    protected static function currentLocale(): ?string
+    {
+        return class_exists(FluentState::class)
+            ? (FluentState::singleton()->getLocale() ?: null)
+            : null;
     }
 
     public static function elementalInstalled(): bool
@@ -162,7 +193,7 @@ class EditLinkService
     {
         // Elemental returns links relative to the base URL; make them safe
         // to use from any page depth.
-        $link = $link ? Director::absoluteURL($link) : null;
+        $link = $link ? Director::absoluteURL($this->withLocale($link)) : null;
         $canEdit = $this->canEdit() && $link;
 
         $data = ArrayData::create([
@@ -179,6 +210,37 @@ class EditLinkService
         $this->extend('updateBadgeData', $data, $type, $record);
 
         return $data->renderWith(static::TEMPLATE);
+    }
+
+    /**
+     * Carry the locale being viewed into a CMS link.
+     *
+     * Fluent resolves the CMS locale from the query param first, then from a
+     * persisted cookie. Without the param, an editor clicking through from a
+     * non-default locale lands in whichever locale they last used in the CMS,
+     * where the record usually will not resolve at all. Worse, Fluent persists
+     * whatever it resolved, so they can carry on editing the wrong locale with
+     * no obvious signal.
+     *
+     * No-ops when Fluent is not installed, so the module keeps working without
+     * it - Fluent is not a dependency.
+     */
+    protected function withLocale(string $link): string
+    {
+        if (!$this->config()->get('carry_locale')) {
+            return $link;
+        }
+
+        $locale = $this->getLocale();
+
+        if (!$locale) {
+            return $link;
+        }
+
+        $param = FluentDirectorExtension::config()->get('query_param') ?: 'l';
+
+        // join_links merges with any query string the CMS link already carries
+        return Controller::join_links($link, '?' . $param . '=' . urlencode($locale));
     }
 
     /**
