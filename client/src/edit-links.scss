@@ -11,6 +11,8 @@
     --ss-edit-link-pill-fg: #1f2937;
     --ss-edit-link-font-size: 11px;
     --ss-edit-link-offset: 12px;
+    --ss-edit-link-max-width: 720px;
+    --ss-edit-link-title-max: 260px;
     --ss-edit-link-z: 10;
     --ss-edit-link-page-z: 999;
 }
@@ -28,7 +30,7 @@
     z-index: var(--ss-edit-link-z) !important;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0;
     box-sizing: border-box;
     max-width: 28px;
@@ -45,9 +47,11 @@
     cursor: pointer;
     transition: max-width .25s ease, gap .25s ease;
 
+    // Grow to fit the content, but never past the configured cap or the
+    // viewport. The badge is right-anchored, so it expands leftwards.
     &:hover,
     &:focus-within {
-        max-width: 640px;
+        max-width: min(var(--ss-edit-link-max-width), calc(100vw - 2 * var(--ss-edit-link-offset)));
         gap: 10px;
     }
 
@@ -70,26 +74,39 @@
         }
     }
 
+    // Info and link are collapsed to zero width until hover. The info
+    // section is the only part allowed to shrink (flex-shrink 1, clipped),
+    // so when space runs out the title truncates and the link stays whole.
     &__info,
     &__link {
-        flex: 0 0 auto;
         display: flex;
         align-items: center;
+        min-width: 0;
         max-width: 0;
+        overflow: hidden;
         white-space: nowrap;
         opacity: 0;
         transition: opacity .15s ease, max-width .25s ease;
+    }
+
+    &__info {
+        flex: 0 1 auto;
+    }
+
+    &__link {
+        flex: 0 0 auto;
     }
 
     &:hover &__info,
     &:hover &__link,
     &:focus-within &__info,
     &:focus-within &__link {
-        max-width: 320px;
+        max-width: var(--ss-edit-link-max-width);
         opacity: 1;
     }
 
     &__class {
+        flex: 0 0 auto;
         padding: 2px 8px;
         font-weight: 500;
         color: var(--ss-edit-link-pill-fg);
@@ -98,12 +115,18 @@
     }
 
     &__id {
+        flex: 0 0 auto;
         padding: 2px 8px;
         font-weight: 500;
     }
 
     &__title {
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: var(--ss-edit-link-title-max);
         margin-left: 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     &__link a {

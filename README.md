@@ -89,6 +89,8 @@ Colours and sizing are CSS custom properties. Override them in your own styleshe
     --ss-edit-link-pill-fg: #1f2937;
     --ss-edit-link-font-size: 11px;
     --ss-edit-link-offset: 12px;
+    --ss-edit-link-max-width: 720px;   /* widest the badge grows on hover */
+    --ss-edit-link-title-max: 260px;   /* longer titles truncate with an ellipsis */
     --ss-edit-link-z: 10;
     --ss-edit-link-page-z: 999;
 }
